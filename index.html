@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOL Whale Tracker - Real-Time Monitoring</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.70.0/lib/index.iife.min.js"></script>
+    <style>
+        :root {
+            --primary: #9945FF;
+            --secondary: #14F195;
+            --dark: #0F0F0F;
+            --light: #F0F0F0;
+            --accent: #FF5F5F;
+            --card-bg: #1A1A1A;
+            --success: #00C853;
+            --warning: #FFAB00;
+            --danger: #FF5252;
+            --twitter-blue: #1DA1F2;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            padding: 15px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo-icon {
+            font-size: 28px;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 30px auto;
+        }
+        
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .transaction-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .transaction-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .whale-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .whale-name {
+            font-weight: 600;
+        }
+        
+        .whale-address {
+            font-size: 12px;
+            opacity: 0.7;
+            word-break: break-all;
+        }
+        
+        .transaction-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .coin-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .coin-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--dark);
+            font-weight: bold;
+        }
+        
+        .buy {
+            color: var(--success);
+        }
+        
+        .sell {
+            color: var(--danger);
+        }
+        
+        .tx-amount {
+            font-weight: 600;
+        }
+        
+        .tx-time {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .tweet-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .tweet-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--twitter-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .tweet-user {
+            font-weight: 600;
+        }
+        
+        .tweet-handle {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .tweet-content {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .tweet-actions {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+        
+        .tweet-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.7;
+        }
+        
+        .whale-logo {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        
+        .whale-count {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            text-align: center;
+            line-height: 18px;
+            margin-left: 5px;
+            cursor: help;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            color: var(--light);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification-badge {
+            background-color: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .status-active {
+            background-color: var(--success);
+        }
+        
+        .status-inactive {
+            background-color: var(--danger);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .panel {
+                height: auto;
+                max-height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content container">
+            <div class="logo">
+                <i class="fas fa-radar logo-icon"></i>
+                <span>SOL Whale Tracker</span>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-indicator status-active"></span>
+                <span>Connected</span>
+            </div>
+        </div>
+    </header>
+    
+    <div class="dashboard container">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <img src="https://cryptologos.cc/logos/whale-watch-wlogo.png" class="whale-logo" alt="Whale">
+                    Whale Transactions
+                    <div class="notification-badge" id="whaleNotification" style="display: none;">0</div>
+                </div>
+                <button class="refresh-btn" id="refreshWhales">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div id="whaleTransactions">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <span>Loading whale transactions...</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fab fa-twitter"></i>
+                    Influencer Activity
+                    <div class="notification-badge" id="tweetNotification" style="display: none;">0</div>
+                </div>
+                <button class="refresh-btn" id="refreshTweets">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div id="tweetFeed">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <span>Loading influencer tweets...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Whale wallets data
+        const whaleWallets = [
+            { name: "Ansem", address: "AVAZvHLR2PcWpDf8BXY4rVxNHYRBytycHkcB5z5QNXYm", emoji: "🚀" },
+            { name: "Bastille", address: "3kebnKw7cPdSkLRfiMEALyZJGZ4wdiSRvmoN4rD1yPzV", emoji: "😀" },
+            { name: "daumen.eth", address: "8MaVa9kdt3NW4Q5HyNAm1X5LbR8PQRVDc1W8NMVK88D5", emoji: "😀" },
+            // ... (include all your whale wallets here)
+            { name: "risk100 top tra", address: "BHREKFkPQgAtDs8Vb1UfLkUpjG6ScidTjHaCWFuG2AtX", emoji: "😀" }
+        ];
+
+        // Twitter influencers to track
+        const cryptoInfluencers = [
+            { name: "Ansem", handle: "blknoiz06" },
+            { name: "Cobie", handle: "cobie" },
+            { name: "Hsaka", handle: "HsakaTrades" },
+            // ... (include all your influencers here)
+            { name: "Crypto Rover", handle: "rovercrc" }
+        ];
+
+        // Solana connection
+        const connection = new solanaWeb3.Connection(
+            "https://solana-mainnet.g.alchemy.com/v2/demo",
+            "confirmed"
+        );
+
+        // Track whale activity by token
+        const whaleActivity = {};
+
+        // Fetch whale transactions
+        async function fetchWhaleTransactions() {
+            const container = document.getElementById('whaleTransactions');
+            
+            try {
+                container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><span>Loading whale transactions...</span></div>';
+                
+                const transactions = [];
+                const newTransactions = [];
+                
+                // Check each whale wallet
+                for (const whale of whaleWallets) {
+                    try {
+                        const publicKey = new solanaWeb3.PublicKey(whale.address);
+                        const signatures = await connection.getSignaturesForAddress(publicKey, { limit: 5 });
+                        
+                        for (const signature of signatures) {
+                            const tx = await connection.getTransaction(signature.signature);
+                            
+                            if (tx?.meta?.preTokenBalances?.length > 0) {
+                                const preBalances = tx.meta.preTokenBalances;
+                                const postBalances = tx.meta.postTokenBalances;
+                                
+                                for (let i = 0; i < preBalances.length; i++) {
+                                    const pre = preBalances[i];
+                                    const post = postBalances[i];
+                                    
+                                    if (pre?.uiTokenAmount?.uiAmount !== undefined && 
+                                        post?.uiTokenAmount?.uiAmount !== undefined) {
+                                        const delta = post.uiTokenAmount.uiAmount - pre.uiTokenAmount.uiAmount;
+                                        
+                                        if (Math.abs(delta) > 0) {
+                                            const isBuy = delta > 0;
+                                            const tokenAddress = pre.mint;
+                                            const tokenSymbol = tokenAddress.slice(0, 4) + '...' + tokenAddress.slice(-4);
+                                            const amount = Math.abs(delta).toLocaleString();
+                                            
+                                            // Track whale activity
+                                            if (!whaleActivity[tokenAddress]) {
+                                                whaleActivity[tokenAddress] = {
+                                                    buys: [],
+                                                    sells: [],
+                                                    symbol: tokenSymbol
+                                                };
+                                            }
+                                            
+                                            if (isBuy) {
+                                                if (!whaleActivity[tokenAddress].buys.includes(whale.name)) {
+                                                    whaleActivity[tokenAddress].buys.push(whale.name);
+                                                }
+                                            } else {
+                                                if (!whaleActivity[tokenAddress].sells.includes(whale.name)) {
+                                                    whaleActivity[tokenAddress].sells.push(whale.name);
+                                                }
+                                            }
+                                            
+                                            const txData = {
+                                                name: whale.name,
+                                                address: whale.address,
+                                                emoji: whale.emoji,
+                                                type: isBuy ? "buy" : "sell",
+                                                coin: tokenSymbol,
+                                                amount: amount,
+                                                time: formatTime(new Date(signature.blockTime * 1000)),
+                                                tokenAddress: tokenAddress
+                                            };
+                                            
+                                            transactions.push(txData);
+                                            
+                                            // Check if this is a new transaction (last 5 minutes)
+                                            if (signature.blockTime > (Date.now()/1000 - 300)) {
+                                                newTransactions.push(txData);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error processing whale ${whale.name}:`, error);
+                    }
+                }
+                
+                // Sort by time (newest first)
+                transactions.sort((a, b) => new Date(b.time) - new Date(a.time));
+                
+                // Render transactions
+                renderWhaleTransactions(transactions);
+                
+                // Update notification badge
+                if (newTransactions.length > 0) {
+                    const badge = document.getElementById('whaleNotification');
+                    badge.textContent = newTransactions.length;
+                    badge.style.display = 'flex';
+                }
+                
+            } catch (error) {
+                console.error("Error fetching whale transactions:", error);
+                container.innerHTML = '<div class="error">Failed to load transactions. Please try again.</div>';
+            }
+        }
+
+        // Fetch influencer tweets
+        async function fetchInfluencerTweets() {
+            const container = document.getElementById('tweetFeed');
+            
+            try {
+                container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><span>Loading tweets...</span></div>';
+                
+                // Use a Twitter API proxy service
+                const response = await fetch(`https://api.twelvedata.com/tweets?symbol=SOL&apikey=demo&source=${cryptoInfluencers.map(i => i.handle).join(',')}`);
+                const data = await response.json();
+                
+                if (data.status === 'error') {
+                    throw new Error(data.message);
+                }
+                
+                const tweets = data.tweets.map(tweet => {
+                    const influencer = cryptoInfluencers.find(i => i.handle === tweet.username) || {
+                        name: tweet.username,
+                        handle: tweet.username
+                    };
+                    
+                    return {
+                        user: influencer.name,
+                        handle: `@${influencer.handle}`,
+                        content: tweet.text,
+                        time: formatTime(new Date(tweet.date)),
+                        likes: tweet.likes > 1000 ? `${(tweet.likes/1000).toFixed(1)}K` : tweet.likes.toString(),
+                        retweets: tweet.retweets > 1000 ? `${(tweet.retweets/1000).toFixed(1)}K` : tweet.retweets.toString(),
+                        replies: tweet.replies > 1000 ? `${(tweet.replies/1000).toFixed(1)}K` : tweet.replies.toString(),
+                        isNew: isRecent(tweet.date)
+                    };
+                });
+                
+                // Sort by time (newest first)
+                tweets.sort((a, b) => new Date(b.time) - new Date(a.time));
+                
+                renderTweets(tweets);
+                
+                // Update notification badge
+                const newTweets = tweets.filter(t => t.isNew).length;
+                if (newTweets > 0) {
+                    const badge = document.getElementById('tweetNotification');
+                    badge.textContent = newTweets;
+                    badge.style.display = 'flex';
+                }
+                
+            } catch (error) {
+                console.error("Error fetching tweets:", error);
+                container.innerHTML = '<div class="error">Failed to load tweets. Please try again.</div>';
+            }
+        }
+
+        // Render whale transactions
+        function renderWhaleTransactions(transactions) {
+            const container = document.getElementById('whaleTransactions');
+            container.innerHTML = '';
+            
+            transactions.forEach(tx => {
+                const card = document.createElement('div');
+                card.className = 'transaction-card';
+                
+                // Check for multiple whales buying same token
+                const whaleCount = whaleActivity[tx.tokenAddress]?.buys?.length || 0;
+                const whaleCountIndicator = whaleCount > 1 ? 
+                    `<span class="whale-count" title="${whaleActivity[tx.tokenAddress].buys.join(', ')}">${whaleCount}</span>` : '';
+                
+                card.innerHTML = `
+                    <div class="transaction-header">
+                        <div class="whale-avatar">${tx.emoji}</div>
+                        <div>
+                            <div class="whale-name">${tx.name}</div>
+                            <div class="whale-address">${tx.address.slice(0, 6)}...${tx.address.slice(-4)}</div>
+                        </div>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="coin-info">
+                            <div class="coin-icon">${tx.coin.slice(0, 2)}</div>
+                            <div>
+                                <div class="${tx.type}">${tx.type.toUpperCase()} ${tx.coin} ${whaleCountIndicator}</div>
+                                <div class="tx-amount">${tx.amount}</div>
+                            </div>
+                        </div>
+                        <div class="tx-time">${tx.time}</div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Render tweets
+        function renderTweets(tweets) {
+            const container = document.getElementById('tweetFeed');
+            container.innerHTML = '';
+            
+            tweets.forEach(tweet => {
+                const card = document.createElement('div');
+                card.className = 'tweet-card';
+                
+                card.innerHTML = `
+                    <div class="tweet-header">
+                        <div class="tweet-avatar">${tweet.user.charAt(0)}</div>
+                        <div>
+                            <div class="tweet-user">${tweet.user}</div>
+                            <div class="tweet-handle">${tweet.handle} · ${tweet.time}</div>
+                        </div>
+                    </div>
+                    <div class="tweet-content">${tweet.content}</div>
+                    <div class="tweet-actions">
+                        <div class="tweet-action">
+                            <i class="far fa-heart"></i> ${tweet.likes}
+                        </div>
+                        <div class="tweet-action">
+                            <i class="fas fa-retweet"></i> ${tweet.retweets}
+                        </div>
+                        <div class="tweet-action">
+                            <i class="far fa-comment"></i> ${tweet.replies}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Helper functions
+        function formatTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return "Just now";
+            if (diff < 3600000) return `${Math.floor(diff/60000)} min ago`;
+            if (diff < 86400000) return `${Math.floor(diff/3600000)} hour${Math.floor(diff/3600000) !== 1 ? 's' : ''} ago`;
+            return date.toLocaleTimeString();
+        }
+
+        function isRecent(dateStr) {
+            const date = new Date(dateStr);
+            return (Date.now() - date) < 300000; // 5 minutes
+        }
+
+        // Event listeners
+        document.getElementById('refreshWhales').addEventListener('click', fetchWhaleTransactions);
+        document.getElementById('refreshTweets').addEventListener('click', fetchInfluencerTweets);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWhaleTransactions();
+            fetchInfluencerTweets();
+            
+            // Refresh every 30 seconds
+            setInterval(fetchWhaleTransactions, 30000);
+            setInterval(fetchInfluencerTweets, 60000);
+        });
+    </script>
+</body>
+</html>
